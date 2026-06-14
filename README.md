@@ -69,59 +69,40 @@ npm run seed
 npm run dev
 ```
 
-Server runs on `http://localhost:3001`.
+Server runs on `http://localhost:5000`.
 
 ## Testing with Postman
 
-### 1. Register a user
+### Setup
+1. Open Postman, create a new collection called "Auth System"
+2. **Seed users first:** `npm run seed` (creates admin + 3 users)
 
-```
-POST http://localhost:3001/api/auth/register
-Content-Type: application/json
+### Flow
+1. Login/Register to receive tokens in the response body
+2. Copy the `accessToken` from the response
+3. For protected endpoints: go to **Authorization** tab, select **Bearer Token**, paste the token
+4. For requests with a body: go to **Body** tab, select **raw** and **JSON**
 
-{"name": "Test User", "email": "test@example.com", "password": "password123"}
-```
+### Postman Request Table
 
-Response includes `accessToken` and `refreshToken` in the body.
+| Method | URL | Auth | Body (raw JSON) |
+|--------|-----|------|-----------------|
+| `POST` | `http://localhost:5000/api/auth/register` | None | `{"name":"Test User","email":"test@example.com","password":"password123"}` |
+| `POST` | `http://localhost:5000/api/auth/login` | None | `{"email":"admin@example.com","password":"password123"}` |
+| `POST` | `http://localhost:5000/api/auth/logout` | Bearer Token | — |
+| `POST` | `http://localhost:5000/api/auth/refresh` | Cookie only | — |
+| `GET` | `http://localhost:5000/api/auth/me` | Bearer Token | — |
+| `POST` | `http://localhost:5000/api/password/forgot` | None | `{"email":"john@example.com"}` |
+| `POST` | `http://localhost:5000/api/password/reset` | None | `{"token":"<from-server-console>","password":"newpassword123"}` |
+| `GET` | `http://localhost:5000/api/users` | Bearer Token (admin) | — |
+| `GET` | `http://localhost:5000/api/users?search=john&page=1&limit=5` | Bearer Token (admin) | — |
+| `GET` | `http://localhost:5000/api/users/1` | Bearer Token | — |
+| `PUT` | `http://localhost:5000/api/users/1` | Bearer Token | `{"name":"Updated Name"}` |
+| `DELETE` | `http://localhost:5000/api/users/5` | Bearer Token (admin) | — |
 
-### 2. Login
-
-```
-POST http://localhost:3001/api/auth/login
-Content-Type: application/json
-
-{"email": "admin@example.com", "password": "password123"}
-```
-
-### 3. Access protected routes
-
-Set `Authorization: Bearer <accessToken>` header on requests.
-
-### 4. Refresh tokens
-
-```
-POST http://localhost:3001/api/auth/refresh
-```
-
-Requires the `refresh_token` cookie from login.
-
-### 5. Password reset
-
-```
-POST http://localhost:3001/api/password/forgot
-Content-Type: application/json
-
-{"email": "john@example.com"}
-```
-
-Check the server console for the reset link (dev mode), then:
-
-```
-POST http://localhost:3001/api/password/reset
-Content-Type: application/json
-
-{"token": "<reset-token>", "password": "newpassword123"}
-```
+> **Note:** The `/api/auth/refresh` endpoint uses HTTP-only cookies. In Postman, cookies are handled automatically — just login first and the refresh cookie will be stored.
+>
+> **Password reset:** In dev mode, the reset link is printed in the server console. Copy the token from the URL and use it in the `/reset` endpoint.
 
 ### Seed Users
 
